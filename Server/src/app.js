@@ -1,8 +1,14 @@
 import express from "express"
+import dns from "dns";
+dns.setServers(["8.8.8.8", "8.8.4.4"]); 
 import connectDB from "./config/db.js";
-import "dotenv/config";
-
 const app = express();
+import "dotenv/config";
+import authRoutes from "./routes/authRoutes.js";
+// ...
+
+
+app.use("/api/auth", authRoutes);
 
 
 
