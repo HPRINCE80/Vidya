@@ -6,18 +6,20 @@ import { Loader } from '../../components/ui/Loader.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import attendanceService from '../../services/attendanceService.js';
 import authService from '../../services/authService.js';
+import noticeService from '../../services/noticeService.js';
 import { getApiErrorMessage } from '../../services/api.js';
 
 const StudentDashboardPage = () => {
   const { user } = useAuth();
   const [records, setRecords] = useState([]);
+  const [notices, setNotices] = useState([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([authService.getDashboardData('student'), attendanceService.getAttendance()])
-      .then(([dashboard, attendance]) => { setMessage(dashboard.message); setRecords(attendance); })
+    Promise.all([authService.getDashboardData('student'), attendanceService.getAttendance(), noticeService.getStudentNotices()])
+      .then(([dashboard, attendance, noticeData]) => { setMessage(dashboard.message); setRecords(attendance); setNotices(noticeData.records || []); })
       .catch((apiError) => setError(getApiErrorMessage(apiError)))
       .finally(() => setLoading(false));
   }, []);
@@ -48,7 +50,7 @@ const StudentDashboardPage = () => {
         <Link to="/student/profile" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-sky-300"><UserRound className="text-violet-600" /><h2 className="mt-4 font-semibold">My profile</h2><p className="mt-1 text-sm text-slate-600">Check your account information.</p></Link>
       </section>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex items-center gap-2"><Megaphone size={18} className="text-sky-600" /><h2 className="font-semibold">Notices</h2></div><p className="mt-3 text-sm text-slate-600">No notice feed endpoint is currently exposed by the backend.</p></div>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Megaphone size={18} className="text-sky-600" /><h2 className="font-semibold">Recent notices</h2></div><Link to="/student/notices" className="text-sm font-medium text-sky-600 hover:text-sky-700">View all</Link></div>{notices.length ? <div className="mt-4 space-y-3">{notices.slice(0, 3).map((notice) => <div key={notice._id} className="border-l-2 border-sky-400 pl-3"><p className="font-medium text-slate-900">{notice.title}</p><p className="mt-1 line-clamp-2 text-sm text-slate-600">{notice.message}</p></div>)}</div> : <p className="mt-4 text-sm text-slate-600">No published notices are available.</p>}</div>
     </div>
   );
 };

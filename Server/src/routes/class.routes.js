@@ -40,6 +40,10 @@ router.get("/teachers", protect, authorize("admin"), async (req, res) => {
 router.get("/students", protect, authorize("admin", "teacher"), async (req, res) => {
   try {
     const filter = { role: "student" };
+    if (req.user.role === "teacher") {
+      const assignedClasses = await Class.find({ classTeacher: req.user._id }).select("_id");
+      filter.classId = { $in: assignedClasses.map(({ _id }) => _id) };
+    }
     if (req.query.classId) {
       const selectedClass = await Class.findById(req.query.classId);
       if (!selectedClass) {

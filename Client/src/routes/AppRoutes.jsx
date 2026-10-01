@@ -4,12 +4,16 @@ import AuthLayout from '../layouts/AuthLayout.jsx';
 import StudentLayout from '../layouts/StudentLayout.jsx';
 import TeacherLayout from '../layouts/TeacherLayout.jsx';
 import RoleFeaturePage from '../pages/common/RoleFeaturePage.jsx';
+import AccountProfilePage from '../pages/common/AccountProfilePage.jsx';
 import LoginPage from '../pages/auth/LoginPage.jsx';
 import RegisterPage from '../pages/auth/RegisterPage.jsx';
 import RegisterRoleSelectPage from '../pages/auth/RegisterRoleSelectPage.jsx';
 import RoleRegisterPage from '../pages/auth/RoleRegisterPage.jsx';
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage.jsx';
 import AdminTeachersPage from '../pages/admin/AdminTeachersPage.jsx';
+import AdminStudentsPage from '../pages/admin/AdminStudentsPage.jsx';
+import AdminFeesPage from '../pages/admin/AdminFeesPage.jsx';
+import AdminNoticesPage from '../pages/admin/AdminNoticesPage.jsx';
 import DashboardPage from '../pages/dashboard/DashboardPage.jsx';
 import StudentAttendancePage from '../pages/student/StudentAttendancePage.jsx';
 import StudentDashboardPage from '../pages/student/StudentDashboardPage.jsx';
@@ -17,6 +21,8 @@ import StudentFeesPage from '../pages/student/StudentFeesPage.jsx';
 import StudentNoticesPage from '../pages/student/StudentNoticesPage.jsx';
 import StudentProfilePage from '../pages/student/StudentProfilePage.jsx';
 import TeacherDashboardPage from '../pages/teacher/TeacherDashboardPage.jsx';
+import TeacherFeesPage from '../pages/teacher/TeacherFeesPage.jsx';
+import TeacherNoticesPage from '../pages/teacher/TeacherNoticesPage.jsx';
 import AdminRoute from './AdminRoute.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
 import PublicRoute from './PublicRoute.jsx';
@@ -46,10 +52,10 @@ const AppRoutes = () => {
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/attendance" element={<DashboardPage />} />
           <Route path="/admin/classes" element={<DashboardPage />} />
-          <Route path="/admin/students" element={<RoleFeaturePage title="Students" description="Review student accounts and class membership." />} />
+          <Route path="/admin/students" element={<AdminStudentsPage />} />
           <Route path="/admin/teachers" element={<AdminTeachersPage />} />
-          <Route path="/admin/fees" element={<RoleFeaturePage title="Fees" description="Manage fee records and payment status." />} />
-          <Route path="/admin/notices" element={<RoleFeaturePage title="Notices" description="Publish announcements for your school community." />} />
+          <Route path="/admin/fees" element={<AdminFeesPage />} />
+          <Route path="/admin/notices" element={<AdminNoticesPage />} />
           <Route path="/admin/reports" element={<RoleFeaturePage title="Reports" description="System-wide reporting will appear here as reporting endpoints are added." />} />
           <Route path="/admin/settings" element={<RoleFeaturePage title="Settings" description="Configure school-wide preferences." />} />
         </Route>
@@ -61,9 +67,9 @@ const AppRoutes = () => {
           <Route path="/teacher" element={<Navigate to="/teacher/dashboard" replace />} />
           <Route path="/teacher/attendance" element={<DashboardPage />} />
           <Route path="/teacher/students" element={<DashboardPage />} />
-          <Route path="/teacher/fees" element={<RoleFeaturePage title="Fees" description="View fee information available to your assigned students." />} />
-          <Route path="/teacher/notices" element={<RoleFeaturePage title="Notices" description="Read school announcements." />} />
-          <Route path="/teacher/profile" element={<RoleFeaturePage title="Profile" description="Review your teacher account details." />} />
+          <Route path="/teacher/fees" element={<TeacherFeesPage />} />
+          <Route path="/teacher/notices" element={<TeacherNoticesPage />} />
+          <Route path="/teacher/profile" element={<AccountProfilePage />} />
         </Route>
       </Route>
 

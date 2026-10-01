@@ -69,6 +69,8 @@ router.put("/:id/pay", protect, authorize("admin"), async (req, res) => {
     }
 
     fee.status = "Paid";
+    fee.paidAmount = fee.amount;
+    fee.paid = true;
     fee.paidOn = new Date();
     if (req.body.paymentMethod) {
       fee.paymentMethod = req.body.paymentMethod;

@@ -1,0 +1,8 @@
+import { useEffect, useState } from 'react';
+import { Loader } from '../../components/ui/Loader.jsx';
+import noticeService from '../../services/noticeService.js';
+import { getApiErrorMessage } from '../../services/api.js';
+
+const TeacherNoticesPage = () => { const [notices, setNotices] = useState([]); const [state, setState] = useState({ loading: true, error: '' }); useEffect(() => { noticeService.getNotices().then((data) => setNotices(data.records || [])).catch((error) => setState({ loading: false, error: getApiErrorMessage(error) })).finally(() => setState((current) => ({ ...current, loading: false }))); }, []); if (state.loading) return <Loader text="Loading notices..." fullHeight />; if (state.error) return <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-700">{state.error}</div>; return <section className="max-w-4xl space-y-5"><div><p className="text-sm font-medium uppercase tracking-[0.16em] text-emerald-600">School updates</p><h1 className="mt-1 text-3xl font-semibold text-slate-900">Notices</h1><p className="mt-2 text-slate-600">Published announcements available to teachers.</p></div>{!notices.length ? <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600 shadow-sm">No published notices available.</div> : <div className="space-y-4">{notices.map((notice) => <article key={notice._id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="font-semibold text-slate-900">{notice.title}</h2><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{notice.message}</p></article>)}</div>}</section>; };
+
+export default TeacherNoticesPage;
