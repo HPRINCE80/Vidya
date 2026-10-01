@@ -23,21 +23,27 @@ const UserSchema = new mongoose.Schema(
       enum: ["admin", "teacher", "student"],
       required: [true, "Role is required"],
     },
+    studentId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
   },
   { timestamps: true }
 );
 
-// Password ko save hone se pehle hash karo
-UserSchema.pre("save", async function (next) {
+// Hash the password before saving it
+UserSchema.pre("save", async function () {
   if (!this.isModified("password")) {
-    return next(); // agar password change nahi hua, to hashing skip karo
+    return;
   }
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
+
 });
 
-// Login ke waqt entered password ko hashed password se compare karne ka method
+// Compare the entered password with the hashed password during login
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
