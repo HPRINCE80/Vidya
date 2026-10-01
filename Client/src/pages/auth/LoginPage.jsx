@@ -38,7 +38,9 @@ const LoginPage = () => {
     try {
       await login(values);
       toast.success('Login successful');
-      navigate('/');
+      const role = localStorage.getItem('school_user');
+      const nextRole = role ? JSON.parse(role).role : 'student';
+      navigate(`/${nextRole}`);
     } catch (error) {
       const message = getApiErrorMessage(error);
       setApiError(message);

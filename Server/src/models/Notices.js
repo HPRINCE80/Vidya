@@ -25,11 +25,10 @@ const noticeSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  createdAt: {
+  publishedAt: {
     type: Date,
-    default: Date.now,
   },
-});
+}, { timestamps: true });
 
 const Notice = mongoose.model("Notice", noticeSchema);
 

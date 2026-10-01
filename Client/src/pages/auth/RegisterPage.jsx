@@ -14,10 +14,8 @@ const registerSchema = yup.object({
   name: yup.string().trim().required('Name is required').min(2, 'Name must be at least 2 characters'),
   email: yup.string().trim().email('Please enter a valid email address').required('Email is required'),
   password: yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
-  role: yup.string().oneOf(['admin', 'teacher', 'student'], 'Please select a valid role').required('Role is required'),
+  confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords must match').required('Please confirm your password'),
   phone: yup.string().trim().optional(),
-  className: yup.string().trim().optional(),
-  teacherId: yup.string().trim().optional(),
   rollNumber: yup.string().trim().optional(),
 });
 
@@ -36,31 +34,21 @@ const RegisterPage = () => {
       name: '',
       email: '',
       password: '',
-      role: 'student',
+      confirmPassword: '',
       phone: '',
-      className: '',
-      teacherId: '',
       rollNumber: '',
     },
   });
 
-  const [selectedRole, setSelectedRole] = useState('student');
-
   const onSubmit = async (values) => {
     setApiError('');
 
-    const payload = {
-      ...values,
-      ...(values.className ? { class: values.className } : {}),
-      ...(values.teacherId ? { teacherId: values.teacherId } : {}),
-    };
-
-    delete payload.className;
-
     try {
-      await registerUser(payload);
+      const payload = { ...values };
+      delete payload.confirmPassword;
+      await registerUser(payload, 'student');
       toast.success('Account created successfully');
-      navigate('/');
+      navigate('/student');
     } catch (error) {
       const message = getApiErrorMessage(error);
       setApiError(message);
@@ -78,26 +66,6 @@ const RegisterPage = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Input id="name" label="Full name" placeholder="John Doe" register={register} error={errors.name?.message} required autoComplete="name" />
-          <div className="space-y-2">
-            <label htmlFor="role" className="block text-sm font-medium text-slate-200">
-              Role
-            </label>
-            <select
-              id="role"
-              {...register('role')}
-              value={selectedRole}
-              onChange={(event) => {
-                register('role').onChange(event);
-                setSelectedRole(event.target.value);
-              }}
-              className="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-3.5 py-2.5 text-sm text-white transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-            >
-              <option value="student">Student</option>
-              <option value="teacher">Teacher</option>
-              <option value="admin">Admin</option>
-            </select>
-            {errors.role?.message && <p className="text-sm text-rose-300">{errors.role.message}</p>}
-          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -107,21 +75,9 @@ const RegisterPage = () => {
 
         <Input id="password" label="Password" type="password" placeholder="••••••••" register={register} error={errors.password?.message} required autoComplete="new-password" />
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input id="className" label="Class" placeholder="Optional" register={register} error={errors.className?.message} autoComplete="off" />
-          <Input id="rollNumber" label="Roll number" placeholder="Optional" register={register} error={errors.rollNumber?.message} autoComplete="off" />
-        </div>
+        <Input id="confirmPassword" label="Confirm password" type="password" placeholder="Repeat your password" register={register} error={errors.confirmPassword?.message} required autoComplete="new-password" />
 
-        {selectedRole === 'teacher' && (
-          <Input
-            id="teacherId"
-            label="Teacher ID"
-            placeholder="Enter teacher ID"
-            register={register}
-            error={errors.teacherId?.message}
-            autoComplete="off"
-          />
-        )}
+        <Input id="rollNumber" label="Roll number" placeholder="Optional" register={register} error={errors.rollNumber?.message} autoComplete="off" />
 
         {apiError && (
           <div className="rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">

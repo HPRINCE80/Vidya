@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import Attendance from "../models/Attendance.js";
 import Class from "../models/Class.js";
 import User from "../models/User.js";
@@ -9,7 +10,7 @@ router.post("/mark-attendance", protect, authorize("teacher", "admin"), async (r
     try {
         const { classId, date, attendanceList } = req.body;
 
-        if (!classId || !date || !Array.isArray(attendanceList) || attendanceList.length === 0) {
+        if (!mongoose.isValidObjectId(classId) || !date || !Array.isArray(attendanceList) || attendanceList.length === 0) {
             return res.status(400).json({ message: "Missing required fields" });
         }
 
@@ -29,7 +30,7 @@ router.post("/mark-attendance", protect, authorize("teacher", "admin"), async (r
 
         const studentIds = attendanceList.map(({ studentId }) => String(studentId));
         const validStatuses = ["present", "absent", "Leave"];
-        if (new Set(studentIds).size !== studentIds.length || attendanceList.some(({ studentId, status }) => !studentId || !validStatuses.includes(status))) {
+        if (new Set(studentIds).size !== studentIds.length || studentIds.some((studentId) => !mongoose.isValidObjectId(studentId)) || attendanceList.some(({ studentId, status }) => !studentId || !validStatuses.includes(status))) {
             return res.status(400).json({ message: "Attendance contains duplicate students or invalid statuses" });
         }
         const enrolledStudents = await User.countDocuments({
@@ -72,17 +73,39 @@ router.get("/get-attendance", protect, authorize("teacher", "admin", "student"),
         let filter = {};
         if (req.user.role === "student") {
             filter.student = req.user._id;
-        }
-        else if (studentId) {
-            filter.student = studentId;
-        } else if (classId) {
-            filter.classId = classId;
-        }
-
-        if (classId && req.user.role === "teacher") {
-            const selectedClass = await Class.findById(classId);
-            if (!selectedClass || String(selectedClass.classTeacher) !== String(req.user._id)) {
-                return res.status(403).json({ message: "You can only view attendance for your assigned classes" });
+        } else if (req.user.role === "teacher") {
+            const assignedClasses = await Class.find({ classTeacher: req.user._id }).select("_id");
+            const assignedClassIds = assignedClasses.map(({ _id }) => _id);
+            if (classId) {
+                if (!mongoose.isValidObjectId(classId) || !assignedClassIds.some((assignedClassId) => String(assignedClassId) === String(classId))) {
+                    return res.status(403).json({ message: "You can only view attendance for your assigned classes" });
+                }
+                filter.classId = classId;
+            } else {
+                filter.classId = { $in: assignedClassIds };
+            }
+            if (studentId) {
+                if (!mongoose.isValidObjectId(studentId)) {
+                    return res.status(400).json({ message: "Please provide a valid student ID" });
+                }
+                const student = await User.findOne({ _id: studentId, role: "student", classId: { $in: assignedClassIds } }).select("_id");
+                if (!student) {
+                    return res.status(403).json({ message: "You can only view attendance for students in your assigned classes" });
+                }
+                filter.student = student._id;
+            }
+        } else {
+            if (studentId) {
+                if (!mongoose.isValidObjectId(studentId)) {
+                    return res.status(400).json({ message: "Please provide a valid student ID" });
+                }
+                filter.student = studentId;
+            }
+            if (classId) {
+                if (!mongoose.isValidObjectId(classId)) {
+                    return res.status(400).json({ message: "Please provide a valid class ID" });
+                }
+                filter.classId = classId;
             }
         }
 
@@ -97,7 +120,7 @@ router.get("/get-attendance", protect, authorize("teacher", "admin", "student"),
             filter.date = { $gte: dayStart, $lt: nextDay };
         }
 
-        const attendanceRecords = await Attendance.find(filter).populate("classId", "name section");
+        const attendanceRecords = await Attendance.find(filter).populate("classId", "name section").sort({ date: -1 });
 
         res.status(200).json({ records: attendanceRecords, count: attendanceRecords.length });
     } catch (error) {

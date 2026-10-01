@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import Class from "../models/Class.js";
 import User from "../models/User.js";
 import { protect, authorize } from "../middleware/authmiddleware.js";
@@ -29,7 +30,7 @@ router.get("/unassigned-students", protect, authorize("admin", "teacher"), async
 
 router.get("/teachers", protect, authorize("admin"), async (req, res) => {
   try {
-    const teachers = await User.find({ role: "teacher" }).select("name email").sort({ name: 1 });
+    const teachers = await User.find({ role: "teacher", active: true }).select("name email phone subject active").sort({ name: 1 });
     res.status(200).json({ teachers });
   } catch (error) {
     res.status(500).json({ message: "Unable to load teachers" });
@@ -87,13 +88,18 @@ router.post("/create-class", protect, authorize("admin"), async (req, res) => {
   try {
     const { name, section, classTeacher } = req.body;
 
-    if (!name || !section) {
+    if (!name?.trim() || !section?.trim() || !mongoose.isValidObjectId(classTeacher)) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    const teacher = await User.findOne({ _id: classTeacher, role: "teacher", active: true }).select("_id");
+    if (!teacher) {
+      return res.status(400).json({ message: "Class teacher must be an active teacher" });
+    }
+
     const newClass = new Class({
-      name,
-      section,
+      name: name.trim(),
+      section: section.trim(),
       classTeacher,
     });
 

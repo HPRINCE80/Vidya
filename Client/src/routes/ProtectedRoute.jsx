@@ -3,7 +3,7 @@ import { Loader } from '../components/ui/Loader.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 
 const ProtectedRoute = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return <Loader fullHeight />;
@@ -11,6 +11,10 @@ const ProtectedRoute = () => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role) {
+    return <Navigate to={`/${user.role}`} replace />;
   }
 
   return <Outlet />;

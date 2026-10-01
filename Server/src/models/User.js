@@ -23,6 +23,10 @@ const UserSchema = new mongoose.Schema(
       enum: ["admin", "teacher", "student"],
       required: [true, "Role is required"],
     },
+    active: {
+      type: Boolean,
+      default: true,
+    },
     studentId: {
       type: String,
       unique: true,
@@ -35,6 +39,7 @@ const UserSchema = new mongoose.Schema(
     },
     phone: String,
     rollNumber: String,
+    subject: String,
   },
   { timestamps: true }
 );

@@ -87,6 +87,13 @@ MONGO_URI=mongodb://127.0.0.1:27017/school-management
 JWT_SECRET=replace-with-a-long-random-secret
 PORT=3000
 CLIENT_URL=http://localhost:5173
+
+# Optional values used by the admin seed command
+ADMIN_NAME=System Admin
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change-this-password
+TEACHER_REGISTRATION_CODE=replace-with-teacher-code
+ADMIN_REGISTRATION_CODE=replace-with-admin-code
 ```
 
 Start the API:
@@ -96,6 +103,22 @@ npm start
 ```
 
 The backend runs at `http://localhost:3000` by default.
+
+To create the first administrator, configure the `ADMIN_*` values and run:
+
+```bash
+npm run seed:admin
+```
+
+Public registration is intentionally limited to student accounts. Teachers and administrators must be created through a backend-controlled process.
+
+The role-specific registration endpoints accept the server-only codes above:
+
+- `POST /api/auth/register/student`
+- `POST /api/auth/register/teacher`
+- `POST /api/auth/register/admin`
+
+Registration codes must never be placed in frontend or `VITE_` environment variables.
 
 ### 3. Install frontend dependencies
 
@@ -136,6 +159,9 @@ All API routes are prefixed with `/api`.
 | --- | --- | --- |
 | Auth | `POST /api/auth/register` | Public |
 | Auth | `POST /api/auth/login` | Public |
+| Auth | `GET /api/auth/me` | Protected |
+| Auth | `POST /api/auth/logout` | Protected |
+| Admin | `POST /api/admin/teachers` | Admin |
 | Auth | `GET /api/auth/admin-dashboard` | Admin |
 | Auth | `GET /api/auth/teacher-dashboard` | Teacher |
 | Auth | `GET /api/auth/student-dashboard` | Student |
@@ -147,6 +173,9 @@ All API routes are prefixed with `/api`.
 | Fees | `POST /api/fees/add-fees` | Admin |
 | Fees | `GET /api/fees/view` | Protected |
 | Fees | `PUT /api/fees/:id/pay` | Admin |
+| Profile | `GET /api/users/profile` | Protected |
+| Profile | `PUT /api/users/profile` | Protected |
+| Notices | `GET /api/notices` | Student |
 
 Protected requests require a JWT access token:
 
@@ -165,6 +194,8 @@ Authorization: Bearer <token>
 - Both applications use ES modules.
 - Backend imports include explicit `.js` extensions.
 - Keep secrets and database credentials in `Server/.env`; never commit them.
+- Backend requests are protected with JWT, role authorization, Helmet, CORS allowlisting, rate limiting, and server-side validation.
+- Teacher attendance, results, and fee reads are restricted to assigned classes; students can only read their own records.
 - The frontend expects the API to be available at the URL configured in its service layer.
 - MongoDB must be available before starting the server.
 

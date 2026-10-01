@@ -6,8 +6,13 @@ export const authService = {
     return data;
   },
 
-  register: async (payload) => {
-    const { data } = await api.post('/auth/register', payload);
+  register: async (payload, role = 'student') => {
+    const endpoints = {
+      student: '/auth/register/student',
+      teacher: '/auth/register/teacher',
+      admin: '/auth/register/admin',
+    };
+    const { data } = await api.post(endpoints[role] || endpoints.student, payload);
     return data;
   },
 

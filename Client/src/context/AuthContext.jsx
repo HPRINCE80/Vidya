@@ -50,8 +50,8 @@ export const AuthProvider = ({ children }) => {
     return response;
   };
 
-  const register = async (payload) => {
-    const response = await authService.register(payload);
+  const register = async (payload, role = 'student') => {
+    const response = await authService.register(payload, role);
 
     const nextUser = {
       _id: response._id,
