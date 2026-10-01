@@ -28,6 +28,13 @@ const UserSchema = new mongoose.Schema(
       unique: true,
       sparse: true,
     },
+    classId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class",
+      default: null,
+    },
+    phone: String,
+    rollNumber: String,
   },
   { timestamps: true }
 );
