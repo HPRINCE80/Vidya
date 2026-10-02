@@ -5,6 +5,7 @@ import StudentLayout from '../layouts/StudentLayout.jsx';
 import TeacherLayout from '../layouts/TeacherLayout.jsx';
 import RoleFeaturePage from '../pages/common/RoleFeaturePage.jsx';
 import AccountProfilePage from '../pages/common/AccountProfilePage.jsx';
+import AttendancePage from '../pages/common/AttendancePage.jsx';
 import LoginPage from '../pages/auth/LoginPage.jsx';
 import RegisterPage from '../pages/auth/RegisterPage.jsx';
 import RegisterRoleSelectPage from '../pages/auth/RegisterRoleSelectPage.jsx';
@@ -50,7 +51,7 @@ const AppRoutes = () => {
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="/admin/attendance" element={<DashboardPage />} />
+          <Route path="/admin/attendance" element={<AttendancePage />} />
           <Route path="/admin/classes" element={<DashboardPage />} />
           <Route path="/admin/students" element={<AdminStudentsPage />} />
           <Route path="/admin/teachers" element={<AdminTeachersPage />} />
@@ -65,7 +66,7 @@ const AppRoutes = () => {
         <Route element={<TeacherLayout />}>
           <Route path="/teacher/dashboard" element={<TeacherDashboardPage />} />
           <Route path="/teacher" element={<Navigate to="/teacher/dashboard" replace />} />
-          <Route path="/teacher/attendance" element={<DashboardPage />} />
+          <Route path="/teacher/attendance" element={<AttendancePage />} />
           <Route path="/teacher/students" element={<DashboardPage />} />
           <Route path="/teacher/fees" element={<TeacherFeesPage />} />
           <Route path="/teacher/notices" element={<TeacherNoticesPage />} />

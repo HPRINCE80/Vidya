@@ -2,7 +2,7 @@ import express from "express";
 import { body } from "express-validator";
 import { authorize, protect } from "../middleware/authmiddleware.js";
 import { validate } from "../middleware/validationMiddleware.js";
-import { addTeacher } from "../controllers/adminController.js";
+import { addTeacher, deleteStudent } from "../controllers/adminController.js";
 
 const router = express.Router();
 
@@ -15,5 +15,6 @@ const teacherFields = [
 ];
 
 router.post("/teachers", protect, authorize("admin"), teacherFields, validate, addTeacher);
+router.delete("/students/:studentId", protect, authorize("admin"), deleteStudent);
 
 export default router;

@@ -69,7 +69,7 @@ router.post("/mark-attendance", protect, authorize("teacher", "admin"), async (r
 
 router.get("/get-attendance", protect, authorize("teacher", "admin", "student"), async (req, res) => {
     try {
-        const { classId, studentId, date } = req.query;
+        const { classId, studentId, date, startDate, endDate } = req.query;
         let filter = {};
         if (req.user.role === "student") {
             filter.student = req.user._id;
@@ -77,7 +77,14 @@ router.get("/get-attendance", protect, authorize("teacher", "admin", "student"),
             const assignedClasses = await Class.find({ classTeacher: req.user._id }).select("_id");
             const assignedClassIds = assignedClasses.map(({ _id }) => _id);
             if (classId) {
-                if (!mongoose.isValidObjectId(classId) || !assignedClassIds.some((assignedClassId) => String(assignedClassId) === String(classId))) {
+                if (!mongoose.isValidObjectId(classId)) {
+                    return res.status(400).json({ message: "Please provide a valid class ID" });
+                }
+                const selectedClass = await Class.findById(classId).select("_id");
+                if (!selectedClass) {
+                    return res.status(404).json({ message: "Class not found" });
+                }
+                if (!assignedClassIds.some((assignedClassId) => String(assignedClassId) === String(classId))) {
                     return res.status(403).json({ message: "You can only view attendance for your assigned classes" });
                 }
                 filter.classId = classId;
@@ -88,9 +95,15 @@ router.get("/get-attendance", protect, authorize("teacher", "admin", "student"),
                 if (!mongoose.isValidObjectId(studentId)) {
                     return res.status(400).json({ message: "Please provide a valid student ID" });
                 }
-                const student = await User.findOne({ _id: studentId, role: "student", classId: { $in: assignedClassIds } }).select("_id");
+                const student = await User.findOne({ _id: studentId, role: "student" }).select("_id classId");
                 if (!student) {
+                    return res.status(404).json({ message: "Student not found" });
+                }
+                if (!assignedClassIds.some((assignedClassId) => String(assignedClassId) === String(student.classId))) {
                     return res.status(403).json({ message: "You can only view attendance for students in your assigned classes" });
+                }
+                if (classId && String(student.classId) !== String(classId)) {
+                    return res.status(403).json({ message: "Student is not enrolled in the selected class" });
                 }
                 filter.student = student._id;
             }
@@ -99,28 +112,50 @@ router.get("/get-attendance", protect, authorize("teacher", "admin", "student"),
                 if (!mongoose.isValidObjectId(studentId)) {
                     return res.status(400).json({ message: "Please provide a valid student ID" });
                 }
-                filter.student = studentId;
+                const student = await User.findOne({ _id: studentId, role: "student" }).select("_id");
+                if (!student) {
+                    return res.status(404).json({ message: "Student not found" });
+                }
+                filter.student = student._id;
             }
             if (classId) {
                 if (!mongoose.isValidObjectId(classId)) {
                     return res.status(400).json({ message: "Please provide a valid class ID" });
                 }
-                filter.classId = classId;
+                const selectedClass = await Class.findById(classId).select("_id");
+                if (!selectedClass) {
+                    return res.status(404).json({ message: "Class not found" });
+                }
+                filter.classId = selectedClass._id;
             }
         }
 
-        if (date) {
-            const dayStart = new Date(date);
-            if (Number.isNaN(dayStart.getTime())) {
-                return res.status(400).json({ message: "Please provide a valid attendance date" });
+        if (date && (startDate || endDate)) {
+            return res.status(400).json({ message: "Use either a date or a date range" });
+        }
+        if (date || startDate || endDate) {
+            const rangeStart = startDate || date ? new Date(startDate || date) : null;
+            const rangeEnd = endDate || date ? new Date(endDate || date) : null;
+            if ((rangeStart && Number.isNaN(rangeStart.getTime())) || (rangeEnd && Number.isNaN(rangeEnd.getTime()))) {
+                return res.status(400).json({ message: "Please provide valid attendance dates" });
             }
-            dayStart.setUTCHours(0, 0, 0, 0);
-            const nextDay = new Date(dayStart);
-            nextDay.setUTCDate(nextDay.getUTCDate() + 1);
-            filter.date = { $gte: dayStart, $lt: nextDay };
+            if (rangeStart) rangeStart.setUTCHours(0, 0, 0, 0);
+            if (rangeEnd) rangeEnd.setUTCHours(0, 0, 0, 0);
+            if (rangeStart && rangeEnd && rangeStart > rangeEnd) {
+                return res.status(400).json({ message: "Start date must be on or before end date" });
+            }
+            filter.date = {};
+            if (rangeStart) filter.date.$gte = rangeStart;
+            if (rangeEnd) {
+                rangeEnd.setUTCDate(rangeEnd.getUTCDate() + 1);
+                filter.date.$lt = rangeEnd;
+            }
         }
 
-        const attendanceRecords = await Attendance.find(filter).populate("classId", "name section").sort({ date: -1 });
+        const attendanceRecords = await Attendance.find(filter)
+            .populate("classId", "name section")
+            .populate("student", "name studentId rollNumber")
+            .sort({ date: -1 });
 
         res.status(200).json({ records: attendanceRecords, count: attendanceRecords.length });
     } catch (error) {
